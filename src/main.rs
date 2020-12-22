@@ -158,7 +158,7 @@ fn parse_logbook_line(line: &str) -> Result<Option<LogDay>, io::Error> {
 
     let captures = match RE.captures(line) {
         Some(captures) => captures,
-        None => return Ok(None)
+        None => return Ok(None),
     };
     let date_str = captures[1].to_string();
     let crag_name = captures[2].to_string();
@@ -166,7 +166,14 @@ fn parse_logbook_line(line: &str) -> Result<Option<LogDay>, io::Error> {
     let date = match NaiveDate::parse_from_str(&date_str, "%Y-%m-%d") {
         Ok(date) => date,
         Err(err) => {
-            return Err(io::Error::new(io::ErrorKind::Other, format!("Cannot parse logbook date \"{}\": {}", date_str, err)));
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!(
+                    "Cannot parse logbook date \"{}\": {}",
+                    date_str,
+                    err
+                ),
+            ));
         }
     };
 
@@ -174,7 +181,8 @@ fn parse_logbook_line(line: &str) -> Result<Option<LogDay>, io::Error> {
 }
 
 fn get_logdays_from_logbook(logbook_string: &str) -> Result<Vec<LogDay>, io::Error> {
-    let logbook_lines = logbook_string.split("\n")
+    let logbook_lines = logbook_string
+        .split("\n")
         .filter(|line| line.len() > 0)
         .skip_while(|line| *line != "### BEGIN theCrag sync")
         .skip(1)
@@ -184,7 +192,7 @@ fn get_logdays_from_logbook(logbook_string: &str) -> Result<Vec<LogDay>, io::Err
     for line in logbook_lines {
         match parse_logbook_line(line)? {
             Some(logday) => logdays.push(logday),
-            None => {},
+            None => {}
         };
     }
 
