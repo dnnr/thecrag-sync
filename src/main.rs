@@ -2,8 +2,10 @@
 extern crate lazy_static;
 extern crate regex;
 extern crate simple_error;
+extern crate deunicode;
 extern crate itertools;
 
+use deunicode::deunicode;
 use simple_error::SimpleError;
 use clap::arg_enum;
 use chrono::NaiveDate;
@@ -72,6 +74,17 @@ struct LogDay {
     date: NaiveDate,
 }
 
+fn transliterate_crag_name(name: &String) -> String {
+    // Manually transliterate umlauts (deunicode doesn't do it)
+    let name = name.replace("ä", "ae")
+        .replace("ö", "oe")
+        .replace("ü", "ue")
+        .replace("Ä", "Ae")
+        .replace("Ö", "Oe")
+        .replace("Ü", "Ue");
+    deunicode(&name)
+}
+
 fn generate_logbook_from_csv(csv_file: &PathBuf) -> Result<String, io::Error> {
     let csv_string = fs::read_to_string(csv_file)?;
 
@@ -83,9 +96,14 @@ fn generate_logbook_from_csv(csv_file: &PathBuf) -> Result<String, io::Error> {
     }
 
     Ok(
-        days_to_crags.iter()
+        days_to_crags
+            .iter()
             .map(|(date, crags)| {
-                format!("{}: Felsklettern ({})", date, itertools::join(crags, ", "))
+                format!(
+                    "{}: Felsklettern ({})",
+                    date,
+                    itertools::join(crags.iter().map(transliterate_crag_name), ", ")
+                )
             })
             .collect::<Vec<String>>()
             .join("\n"),
