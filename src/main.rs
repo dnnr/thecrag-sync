@@ -212,9 +212,10 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
 
 fn get_crag_name_from_path(crag_path: &str) -> String {
     let mut nodes: Vec<&str> = crag_path.split(" - ").collect();
-    let typical_non_crags = vec!["Upper part", "Left", "Right", "Middle", "Centre", "East"];
 
-    let crag_name = loop {
+    // Look for the last component before u typical sector name:
+    let typical_non_crags = vec!["Upper part", "Left", "Right", "Middle", "Centre", "East"];
+    let mut crag_name = loop {
         let last_node = nodes.last().unwrap_or(&"");
         if typical_non_crags.contains(last_node) {
             nodes.pop();
@@ -222,6 +223,11 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
             break last_node;
         }
     };
+
+    if nodes.contains(&"Geyikbayırı") {
+        // Here, the best crag name is usually the second component:
+        crag_name = &nodes[1];
+    }
 
     crag_name.to_string()
 }
