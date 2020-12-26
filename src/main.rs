@@ -49,8 +49,8 @@ fn main() {
         OperationMode::Print => {
             // let thecrag_log = get_logbook_from_thecrag(&args.thecrag_csv);
             // match thecrag_log {
-                // Ok(diff) => println!("{:?}", diff),
-                // Err(err) => println!("{}", err),
+            // Ok(diff) => println!("{:?}", diff),
+            // Err(err) => println!("{}", err),
             // };
         }
         OperationMode::Diff => {
@@ -133,32 +133,65 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
     let thecrag_logbook = get_logbook_from_thecrag(&thecrag_string)?;
 
     // Transliterate all crag names in theCrag logbook
-    let thecrag_logbook: Logbook = thecrag_logbook.into_iter().map(|(date, crags)| (date, crags.iter().map(transliterate_crag_name).collect::<BTreeSet<String>>())).collect();
+    let thecrag_logbook: Logbook = thecrag_logbook
+        .into_iter()
+        .map(|(date, crags)| {
+            (
+                date,
+                crags
+                    .iter()
+                    .map(transliterate_crag_name)
+                    .collect::<BTreeSet<String>>(),
+            )
+        })
+        .collect();
 
     let mut diff = String::new();
     // Iterate over union of keys from both maps:
-    for date in thecrag_logbook.keys().collect::<BTreeSet<&NaiveDate>>().union(&txt_logbook.keys().collect::<BTreeSet<&NaiveDate>>()) {
+    for date in thecrag_logbook
+        .keys()
+        .collect::<BTreeSet<&NaiveDate>>()
+        .union(&txt_logbook.keys().collect::<BTreeSet<&NaiveDate>>())
+    {
         // Stop early for dates missing in either of the maps:
         let txt_crags = match txt_logbook.get(&date) {
             Some(c) => c,
             None => {
                 // Entire day is missing
-                diff.push_str(format!("-{}: {}\n", date, itertools::join(thecrag_logbook.get(&date).unwrap().iter(), ", ")).red().to_string().as_str());
+                diff.push_str(
+                    format!(
+                        "-{}: {}\n",
+                        date,
+                        itertools::join(thecrag_logbook.get(&date).unwrap().iter(), ", ")
+                    ).red()
+                        .to_string()
+                        .as_str(),
+                );
                 continue;
-            },
+            }
         };
 
         let thecrag_crags = match thecrag_logbook.get(&date) {
             Some(c) => c,
             None => {
                 // Entire day is extraneous
-                diff.push_str(format!("+{}: {}\n", date, itertools::join(txt_logbook.get(&date).unwrap().iter(), ", ")).green().to_string().as_str());
+                diff.push_str(
+                    format!(
+                        "+{}: {}\n",
+                        date,
+                        itertools::join(txt_logbook.get(&date).unwrap().iter(), ", ")
+                    ).green()
+                        .to_string()
+                        .as_str(),
+                );
                 continue;
-            },
+            }
         };
 
-        let missing_crags: BTreeSet<String> = thecrag_crags.difference(&txt_crags).cloned().collect();
-        let extraneous_crags: BTreeSet<String> = txt_crags.difference(&thecrag_crags).cloned().collect();
+        let missing_crags: BTreeSet<String> =
+            thecrag_crags.difference(&txt_crags).cloned().collect();
+        let extraneous_crags: BTreeSet<String> =
+            txt_crags.difference(&thecrag_crags).cloned().collect();
 
         let mut diff_for_day: Vec<String> = Vec::new();
         for missing_crag in missing_crags {
@@ -270,7 +303,9 @@ fn get_logbook_from_txt(logbook_string: &str) -> Result<Logbook, io::Error> {
     let mut logbook = Logbook::new();
     for line in logbook_lines {
         match parse_txt_line(line)? {
-            Some(logday) => { logbook.insert(logday.date, logday.crags); },
+            Some(logday) => {
+                logbook.insert(logday.date, logday.crags);
+            }
             None => {}
         };
     }
