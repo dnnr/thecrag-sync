@@ -226,7 +226,5 @@ fn get_logbook_from_txt(logbook_string: &str) -> Result<Logbook, io::Error> {
         };
     }
 
-    println!("logbook: {:#?}", logbook);
-
-    Ok(Logbook::new())
+    Ok(logbook)
 }
