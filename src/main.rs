@@ -44,11 +44,11 @@ fn main() {
 
     match args.mode {
         OperationMode::Print => {
-            let thecrag_log = get_logbook_from_thecrag(&args.thecrag_csv);
-            match thecrag_log {
-                Ok(diff) => println!("{:?}", diff),
-                Err(err) => println!("{}", err),
-            };
+            // let thecrag_log = get_logbook_from_thecrag(&args.thecrag_csv);
+            // match thecrag_log {
+                // Ok(diff) => println!("{:?}", diff),
+                // Err(err) => println!("{}", err),
+            // };
         }
         OperationMode::Diff => {
             let diff = generate_diff(&args.thecrag_csv, &args.logbook_txt);
@@ -87,9 +87,7 @@ fn transliterate_crag_name(name: &String) -> String {
     deunicode(&name)
 }
 
-fn get_logbook_from_thecrag(thecrag_csv: &PathBuf) -> Result<Logbook, io::Error> {
-    let csv_string = fs::read_to_string(thecrag_csv)?;
-
+fn get_logbook_from_thecrag(csv_string: &str) -> Result<Logbook, io::Error> {
     let csv_ticks = get_ticks_from_csv(&csv_string)?;
 
     let mut logbook = Logbook::new();
@@ -117,22 +115,68 @@ fn logbook_to_string(logbook: &Logbook) -> String {
         .join("\n")
 }
 
+fn generate_logbook_from_txt(logbook_txt: &PathBuf) -> Result<String, io::Error> {
+    let logbook_string = fs::read_to_string(logbook_txt)?;
+    let logbook_days = get_logbook_from_txt(&logbook_string)?;
+
+    Ok("".to_string())
+}
+
 fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String, io::Error> {
-    let csv_string = fs::read_to_string(thecrag_csv)?;
+    let thecrag_string = fs::read_to_string(thecrag_csv)?;
     let logbook_string = fs::read_to_string(logbook_txt)?;
 
-    // let csv_ticks = get_ticks_from_csv(&csv_string)?;
-    // let logbook_days = get_logbook_from_txt(&logbook_string)?;
+    let txt_logbook = get_logbook_from_txt(&logbook_string)?;
+    let thecrag_logbook = get_logbook_from_thecrag(&thecrag_string)?;
 
-    // let thecrag_logbook = get_logbook_from_thecrag(&thecrag_csv)?;
-    // let txt_logbook = generate_logbook_from_txt(&logbook_txt)?;
+    // Transliterate all crag names in theCrag logbook
+    let thecrag_logbook: Logbook = thecrag_logbook.into_iter().map(|(date, crags)| (date, crags.iter().map(transliterate_crag_name).collect::<BTreeSet<String>>())).collect();
 
-    Ok("No diff to report yet".to_string())
+    let mut diff = String::new();
+    // Iterate over union of keys from both maps:
+    for date in thecrag_logbook.keys().collect::<BTreeSet<&NaiveDate>>().union(&txt_logbook.keys().collect::<BTreeSet<&NaiveDate>>()) {
+        // Stop early for dates missing in either of the maps:
+        let txt_crags = match txt_logbook.get(&date) {
+            Some(c) => c,
+            None => {
+                // Entire day is missing
+                diff.push_str(format!("-{}: {}\n", date, itertools::join(thecrag_logbook.get(&date).unwrap().iter(), ", ")).as_str());
+                continue;
+            },
+        };
+
+        let thecrag_crags = match thecrag_logbook.get(&date) {
+            Some(c) => c,
+            None => {
+                // Entire day is extraneous
+                diff.push_str(format!("+{}: {}\n", date, itertools::join(txt_logbook.get(&date).unwrap().iter(), ", ")).as_str());
+                continue;
+            },
+        };
+
+        let missing_crags: BTreeSet<String> = thecrag_crags.difference(&txt_crags).cloned().collect();
+        let extraneous_crags: BTreeSet<String> = txt_crags.difference(&thecrag_crags).cloned().collect();
+
+        let mut diff_for_day: Vec<String> = Vec::new();
+        for missing_crag in missing_crags {
+            diff_for_day.push(format!("-{}", missing_crag));
+        }
+
+        for extraneous_crag in extraneous_crags {
+            diff_for_day.push(format!("+{}", extraneous_crag));
+        }
+
+        if diff_for_day.len() > 0 {
+            diff.push_str(format!("{}: {}\n", date, diff_for_day.join(", ")).as_str());
+        }
+    }
+
+    Ok(diff)
 }
 
 fn get_crag_name_from_path(crag_path: &str) -> String {
     let mut nodes: Vec<&str> = crag_path.split(" - ").collect();
-    let typical_non_crags = vec!["Upper part", "Left", "Right", "Middle", "Centre"];
+    let typical_non_crags = vec!["Upper part", "Left", "Right", "Middle", "Centre", "East"];
 
     let crag_name = loop {
         let last_node = nodes.last().unwrap_or(&"");
