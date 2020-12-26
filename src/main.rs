@@ -47,11 +47,11 @@ fn main() {
 
     match args.mode {
         OperationMode::Print => {
-            // let thecrag_log = get_logbook_from_thecrag(&args.thecrag_csv);
-            // match thecrag_log {
-            // Ok(diff) => println!("{:?}", diff),
-            // Err(err) => println!("{}", err),
-            // };
+            let thecrag_log = get_thecrag_logbook_as_string(&args.thecrag_csv);
+            match thecrag_log {
+                Ok(diff) => println!("{}", diff),
+                Err(err) => println!("{}", err),
+            };
         }
         OperationMode::Diff => {
             let diff = generate_diff(&args.thecrag_csv, &args.logbook_txt);
@@ -104,18 +104,23 @@ fn get_logbook_from_thecrag(csv_string: &str) -> Result<Logbook, io::Error> {
     Ok(logbook)
 }
 
-fn logbook_to_string(logbook: &Logbook) -> String {
-    logbook
-        .iter()
-        .map(|(date, crags)| {
-            format!(
-                "{}: Felsklettern ({})",
-                date,
-                itertools::join(crags.iter().map(transliterate_crag_name), ", ")
-            )
-        })
-        .collect::<Vec<String>>()
-        .join("\n")
+fn get_thecrag_logbook_as_string(thecrag_csv: &PathBuf) -> Result<String, io::Error> {
+    let thecrag_string = fs::read_to_string(thecrag_csv)?;
+    let thecrag_logbook = get_logbook_from_thecrag(&thecrag_string)?;
+
+    Ok(
+        thecrag_logbook
+            .iter()
+            .map(|(date, crags)| {
+                format!(
+                    "{}: Felsklettern ({})",
+                    date,
+                    itertools::join(crags.iter().map(transliterate_crag_name), ", ")
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n"),
+    )
 }
 
 fn generate_logbook_from_txt(logbook_txt: &PathBuf) -> Result<String, io::Error> {
