@@ -9,7 +9,6 @@ extern crate colored;
 use colored::*;
 
 use deunicode::deunicode;
-use simple_error::SimpleError;
 use clap::arg_enum;
 use chrono::NaiveDate;
 use std::fs;
@@ -20,7 +19,6 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::BTreeSet;
 use regex::Regex;
-use std::str::FromStr;
 
 #[derive(StructOpt)]
 #[structopt(about = "Compare theCrag CSV export to manually maintained logbook")]
@@ -121,13 +119,6 @@ fn get_thecrag_logbook_as_string(thecrag_csv: &PathBuf) -> Result<String, io::Er
             .collect::<Vec<String>>()
             .join("\n"),
     )
-}
-
-fn generate_logbook_from_txt(logbook_txt: &PathBuf) -> Result<String, io::Error> {
-    let logbook_string = fs::read_to_string(logbook_txt)?;
-    let logbook_days = get_logbook_from_txt(&logbook_string)?;
-
-    Ok("".to_string())
 }
 
 fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String, io::Error> {
