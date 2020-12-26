@@ -118,10 +118,10 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
     let logbook_string = fs::read_to_string(logbook_txt)?;
 
     // let csv_ticks = get_ticks_from_csv(&csv_string)?;
-    // let logbook_days = get_logdays_from_logbook(&logbook_string)?;
+    // let logbook_days = get_logbook_from_txt(&logbook_string)?;
 
     let thecrag_logbook = generate_logbook_from_thecrag(&thecrag_csv)?;
-    // let txt_logbook = extract_logbook_from_txt(&logbook_txt);
+    let txt_logbook = generate_logbook_from_txt(&logbook_txt)?;
 
     Ok("No diff to report yet".to_string())
 }
@@ -177,7 +177,7 @@ fn get_ticks_from_csv(csv_string: &str) -> Result<Vec<Tick>, io::Error> {
     Ok(ticks)
 }
 
-fn parse_logbook_line(line: &str) -> Result<Option<LogDay>, io::Error> {
+fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"^([0-9-]+): Felsklettern \(([^()]+)\)").unwrap();
     }
@@ -206,7 +206,7 @@ fn parse_logbook_line(line: &str) -> Result<Option<LogDay>, io::Error> {
     Ok(Some(LogDay { crag_name, date }))
 }
 
-fn get_logdays_from_logbook(logbook_string: &str) -> Result<Vec<LogDay>, io::Error> {
+fn get_logbook_from_txt(logbook_string: &str) -> Result<Vec<LogDay>, io::Error> {
     let logbook_lines = logbook_string
         .split("\n")
         .filter(|line| line.len() > 0)
@@ -216,7 +216,7 @@ fn get_logdays_from_logbook(logbook_string: &str) -> Result<Vec<LogDay>, io::Err
 
     let mut logdays: Vec<LogDay> = Vec::new();
     for line in logbook_lines {
-        match parse_logbook_line(line)? {
+        match parse_txt_line(line)? {
             Some(logday) => logdays.push(logday),
             None => {}
         };
