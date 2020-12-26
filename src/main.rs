@@ -74,6 +74,8 @@ struct LogDay {
     date: NaiveDate,
 }
 
+type Logbook = BTreeMap<NaiveDate, BTreeSet<String>>;
+
 fn transliterate_crag_name(name: &String) -> String {
     // Manually transliterate umlauts (deunicode doesn't do it)
     let name = name.replace("ä", "ae")
@@ -206,7 +208,7 @@ fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
     Ok(Some(LogDay { crag_name, date }))
 }
 
-fn get_logbook_from_txt(logbook_string: &str) -> Result<Vec<LogDay>, io::Error> {
+fn get_logbook_from_txt(logbook_string: &str) -> Result<Logbook, io::Error> {
     let logbook_lines = logbook_string
         .split("\n")
         .filter(|line| line.len() > 0)
@@ -214,15 +216,15 @@ fn get_logbook_from_txt(logbook_string: &str) -> Result<Vec<LogDay>, io::Error> 
         .skip(1)
         .collect::<Vec<&str>>();
 
-    let mut logdays: Vec<LogDay> = Vec::new();
+    let mut logbook = Logbook::new();
     for line in logbook_lines {
         match parse_txt_line(line)? {
-            Some(logday) => logdays.push(logday),
+            Some(logday) => { logbook.entry(logday.date).or_insert_with(BTreeSet::new).insert(logday.crag_name); },
             None => {}
         };
     }
 
-    println!("logdays: {:#?}", logdays);
+    println!("logbook: {:#?}", logbook);
 
-    Ok(vec![])
+    Ok(Logbook::new())
 }
