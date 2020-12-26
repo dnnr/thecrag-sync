@@ -70,8 +70,8 @@ struct Tick {
 
 #[derive(Debug)]
 struct LogDay {
-    crag_name: String,
     date: NaiveDate,
+    crags: BTreeSet<String>,
 }
 
 type Logbook = BTreeMap<NaiveDate, BTreeSet<String>>;
@@ -189,7 +189,7 @@ fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
         None => return Ok(None),
     };
     let date_str = captures[1].to_string();
-    let crag_name = captures[2].to_string();
+    let crags_str = captures[2].to_string();
 
     let date = match NaiveDate::parse_from_str(&date_str, "%Y-%m-%d") {
         Ok(date) => date,
@@ -205,7 +205,9 @@ fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
         }
     };
 
-    Ok(Some(LogDay { crag_name, date }))
+    let crags: BTreeSet<String> = crags_str.split(", ").map(str::to_string).collect();
+
+    Ok(Some(LogDay { date, crags }))
 }
 
 fn get_logbook_from_txt(logbook_string: &str) -> Result<Logbook, io::Error> {
@@ -219,7 +221,7 @@ fn get_logbook_from_txt(logbook_string: &str) -> Result<Logbook, io::Error> {
     let mut logbook = Logbook::new();
     for line in logbook_lines {
         match parse_txt_line(line)? {
-            Some(logday) => { logbook.entry(logday.date).or_insert_with(BTreeSet::new).insert(logday.crag_name); },
+            Some(logday) => { logbook.insert(logday.date, logday.crags); },
             None => {}
         };
     }
