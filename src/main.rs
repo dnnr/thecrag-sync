@@ -2,6 +2,7 @@
 extern crate lazy_static;
 extern crate regex;
 extern crate simple_error;
+extern crate itertools;
 
 use simple_error::SimpleError;
 use clap::arg_enum;
@@ -12,6 +13,7 @@ use std::io;
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::collections::BTreeSet;
 use regex::Regex;
 use std::str::FromStr;
 
@@ -75,15 +77,15 @@ fn generate_logbook_from_csv(csv_file: &PathBuf) -> Result<String, io::Error> {
 
     let csv_ticks = get_ticks_from_csv(&csv_string)?;
 
-    let mut days: BTreeMap<NaiveDate, Vec<Tick>> = BTreeMap::new();
+    let mut days_to_crags: BTreeMap<NaiveDate, BTreeSet<String>> = BTreeMap::new();
     for tick in csv_ticks {
-        days.entry(tick.date).or_insert_with(Vec::new).push(tick);
+        days_to_crags.entry(tick.date).or_insert_with(BTreeSet::new).insert(tick.crag_name);
     }
 
     Ok(
-        days.iter()
-            .map(|(date, tick)| {
-                format!("{}: Felsklettern ({})", date, tick[0].crag_name)
+        days_to_crags.iter()
+            .map(|(date, crags)| {
+                format!("{}: Felsklettern ({})", date, itertools::join(crags, ", "))
             })
             .collect::<Vec<String>>()
             .join("\n"),
