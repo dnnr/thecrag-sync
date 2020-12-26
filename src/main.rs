@@ -46,7 +46,7 @@ fn main() {
         OperationMode::Print => {
             let thecrag_log = get_logbook_from_thecrag(&args.thecrag_csv);
             match thecrag_log {
-                Ok(diff) => println!("{}", diff),
+                Ok(diff) => println!("{:?}", diff),
                 Err(err) => println!("{}", err),
             };
         }
@@ -87,32 +87,34 @@ fn transliterate_crag_name(name: &String) -> String {
     deunicode(&name)
 }
 
-fn get_logbook_from_thecrag(thecrag_csv: &PathBuf) -> Result<String, io::Error> {
+fn get_logbook_from_thecrag(thecrag_csv: &PathBuf) -> Result<Logbook, io::Error> {
     let csv_string = fs::read_to_string(thecrag_csv)?;
 
     let csv_ticks = get_ticks_from_csv(&csv_string)?;
 
-    let mut days_to_crags: BTreeMap<NaiveDate, BTreeSet<String>> = BTreeMap::new();
+    let mut logbook = Logbook::new();
     for tick in csv_ticks {
-        days_to_crags
+        logbook
             .entry(tick.date)
             .or_insert_with(BTreeSet::new)
             .insert(tick.crag_name);
     }
 
-    Ok(
-        days_to_crags
-            .iter()
-            .map(|(date, crags)| {
-                format!(
-                    "{}: Felsklettern ({})",
-                    date,
-                    itertools::join(crags.iter().map(transliterate_crag_name), ", ")
-                )
-            })
-            .collect::<Vec<String>>()
-            .join("\n"),
-    )
+    Ok(logbook)
+}
+
+fn logbook_to_string(logbook: &Logbook) -> String {
+    logbook
+        .iter()
+        .map(|(date, crags)| {
+            format!(
+                "{}: Felsklettern ({})",
+                date,
+                itertools::join(crags.iter().map(transliterate_crag_name), ", ")
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n")
 }
 
 fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String, io::Error> {
