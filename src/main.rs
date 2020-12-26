@@ -22,11 +22,11 @@ use std::str::FromStr;
 #[derive(StructOpt)]
 #[structopt(about = "Compare theCrag CSV export to manually maintained logbook")]
 struct CliArgs {
-    #[structopt(long = "csv")]
-    csv_file: PathBuf,
+    #[structopt(long = "thecrag-csv")]
+    thecrag_csv: PathBuf,
 
     #[structopt(long = "logbook")]
-    logbook_file: PathBuf,
+    logbook_txt: PathBuf,
 
     #[structopt(long = "mode", possible_values = &vec!["print", "diff"])]
     mode: OperationMode,
@@ -44,14 +44,14 @@ fn main() {
 
     match args.mode {
         OperationMode::Print => {
-            let thecrag_log = generate_logbook_from_csv(&args.csv_file);
+            let thecrag_log = generate_logbook_from_thecrag(&args.thecrag_csv);
             match thecrag_log {
                 Ok(diff) => println!("{}", diff),
                 Err(err) => println!("{}", err),
             };
         }
         OperationMode::Diff => {
-            let diff = generate_diff(&args.csv_file, &args.logbook_file);
+            let diff = generate_diff(&args.thecrag_csv, &args.logbook_txt);
             match diff {
                 Ok(diff) => print!("{}", diff),
                 Err(err) => println!("{}", err),
@@ -85,14 +85,17 @@ fn transliterate_crag_name(name: &String) -> String {
     deunicode(&name)
 }
 
-fn generate_logbook_from_csv(csv_file: &PathBuf) -> Result<String, io::Error> {
-    let csv_string = fs::read_to_string(csv_file)?;
+fn generate_logbook_from_thecrag(thecrag_csv: &PathBuf) -> Result<String, io::Error> {
+    let csv_string = fs::read_to_string(thecrag_csv)?;
 
     let csv_ticks = get_ticks_from_csv(&csv_string)?;
 
     let mut days_to_crags: BTreeMap<NaiveDate, BTreeSet<String>> = BTreeMap::new();
     for tick in csv_ticks {
-        days_to_crags.entry(tick.date).or_insert_with(BTreeSet::new).insert(tick.crag_name);
+        days_to_crags
+            .entry(tick.date)
+            .or_insert_with(BTreeSet::new)
+            .insert(tick.crag_name);
     }
 
     Ok(
@@ -110,19 +113,22 @@ fn generate_logbook_from_csv(csv_file: &PathBuf) -> Result<String, io::Error> {
     )
 }
 
-fn generate_diff(csv_file: &PathBuf, logbook_file: &PathBuf) -> Result<String, io::Error> {
-    let csv_string = fs::read_to_string(csv_file)?;
-    let logbook_string = fs::read_to_string(logbook_file)?;
+fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String, io::Error> {
+    let csv_string = fs::read_to_string(thecrag_csv)?;
+    let logbook_string = fs::read_to_string(logbook_txt)?;
 
-    let csv_ticks = get_ticks_from_csv(&csv_string)?;
-    let logbook_days = get_logdays_from_logbook(&logbook_string)?;
+    // let csv_ticks = get_ticks_from_csv(&csv_string)?;
+    // let logbook_days = get_logdays_from_logbook(&logbook_string)?;
+
+    let thecrag_logbook = generate_logbook_from_thecrag(&thecrag_csv)?;
+    // let txt_logbook = extract_logbook_from_txt(&logbook_txt);
 
     Ok("No diff to report yet".to_string())
 }
 
 fn get_crag_name_from_path(crag_path: &str) -> String {
     let mut nodes: Vec<&str> = crag_path.split(" - ").collect();
-    let typical_non_crags = vec!["Upper part", "Left", "Right", "Middle"];
+    let typical_non_crags = vec!["Upper part", "Left", "Right", "Middle", "Centre"];
 
     let crag_name = loop {
         let last_node = nodes.last().unwrap_or(&"");
