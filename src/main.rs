@@ -228,6 +228,9 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
             ("Schlehenmühle", 4),
             ("Unteres Wiesenttal", 4),
             ("Unteres Trubachtal", 4),
+            ("Leinleitertal", 4),
+            ("Monte Garzo", 0),
+            ("Vosges du Nord", 1),
             ].iter().cloned().collect();
     }
 
