@@ -44,7 +44,7 @@ fn main() {
 
     match args.mode {
         OperationMode::Print => {
-            let thecrag_log = generate_logbook_from_thecrag(&args.thecrag_csv);
+            let thecrag_log = get_logbook_from_thecrag(&args.thecrag_csv);
             match thecrag_log {
                 Ok(diff) => println!("{}", diff),
                 Err(err) => println!("{}", err),
@@ -87,7 +87,7 @@ fn transliterate_crag_name(name: &String) -> String {
     deunicode(&name)
 }
 
-fn generate_logbook_from_thecrag(thecrag_csv: &PathBuf) -> Result<String, io::Error> {
+fn get_logbook_from_thecrag(thecrag_csv: &PathBuf) -> Result<String, io::Error> {
     let csv_string = fs::read_to_string(thecrag_csv)?;
 
     let csv_ticks = get_ticks_from_csv(&csv_string)?;
@@ -122,8 +122,8 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
     // let csv_ticks = get_ticks_from_csv(&csv_string)?;
     // let logbook_days = get_logbook_from_txt(&logbook_string)?;
 
-    let thecrag_logbook = generate_logbook_from_thecrag(&thecrag_csv)?;
-    let txt_logbook = generate_logbook_from_txt(&logbook_txt)?;
+    // let thecrag_logbook = get_logbook_from_thecrag(&thecrag_csv)?;
+    // let txt_logbook = generate_logbook_from_txt(&logbook_txt)?;
 
     Ok("No diff to report yet".to_string())
 }
