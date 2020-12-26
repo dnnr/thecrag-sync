@@ -4,6 +4,9 @@ extern crate regex;
 extern crate simple_error;
 extern crate deunicode;
 extern crate itertools;
+extern crate colored;
+
+use colored::*;
 
 use deunicode::deunicode;
 use simple_error::SimpleError;
@@ -140,7 +143,7 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
             Some(c) => c,
             None => {
                 // Entire day is missing
-                diff.push_str(format!("-{}: {}\n", date, itertools::join(thecrag_logbook.get(&date).unwrap().iter(), ", ")).as_str());
+                diff.push_str(format!("-{}: {}\n", date, itertools::join(thecrag_logbook.get(&date).unwrap().iter(), ", ")).red().to_string().as_str());
                 continue;
             },
         };
@@ -149,7 +152,7 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
             Some(c) => c,
             None => {
                 // Entire day is extraneous
-                diff.push_str(format!("+{}: {}\n", date, itertools::join(txt_logbook.get(&date).unwrap().iter(), ", ")).as_str());
+                diff.push_str(format!("+{}: {}\n", date, itertools::join(txt_logbook.get(&date).unwrap().iter(), ", ")).green().to_string().as_str());
                 continue;
             },
         };
@@ -159,11 +162,11 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
 
         let mut diff_for_day: Vec<String> = Vec::new();
         for missing_crag in missing_crags {
-            diff_for_day.push(format!("-{}", missing_crag));
+            diff_for_day.push(format!("-{}", missing_crag).red().to_string());
         }
 
         for extraneous_crag in extraneous_crags {
-            diff_for_day.push(format!("+{}", extraneous_crag));
+            diff_for_day.push(format!("+{}", extraneous_crag).green().to_string());
         }
 
         if diff_for_day.len() > 0 {
