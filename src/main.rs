@@ -127,6 +127,7 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
 
     let txt_logbook = get_logbook_from_txt(&logbook_string)?;
     let thecrag_logbook = get_logbook_from_thecrag(&thecrag_string)?;
+    let first_valid_date = txt_logbook.keys().next().unwrap();
 
     // Transliterate all crag names in theCrag logbook
     let thecrag_logbook: Logbook = thecrag_logbook
@@ -149,6 +150,11 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
         .collect::<BTreeSet<&NaiveDate>>()
         .union(&txt_logbook.keys().collect::<BTreeSet<&NaiveDate>>())
     {
+        // Entries from before the "first valid date" are ignored entirely
+        if date <= &first_valid_date {
+            continue;
+        }
+
         // Stop early for dates missing in either of the maps:
         let txt_crags = match txt_logbook.get(&date) {
             Some(c) => c,
