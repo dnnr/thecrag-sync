@@ -320,7 +320,13 @@ fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
         }
     };
 
-    let crags: BTreeSet<String> = crags_str.split(", ").map(str::to_string).collect();
+    let crags: BTreeSet<String> = crags_str
+        .split(", ")
+        .map(str::to_string)
+        .map(|s| s.replace("\\ ", " ")) // Resolve escaped crag separators (some crags actually have ", " in their name)
+        .map(|s| s.replace("[", "(")) // Resolve escaped crag separators (some crags actually have "(" in their name)
+        .map(|s| s.replace("]", ")")) // Resolve escaped crag separators (some crags actually have ")" in their name)
+        .collect();
 
     Ok(Some(LogDay { date, crags }))
 }
