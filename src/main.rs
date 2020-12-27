@@ -282,7 +282,7 @@ fn get_ticks_from_csv(csv_string: &str) -> Result<Vec<Tick>, io::Error> {
 
 fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"^([0-9-]+): Felsklettern \(([^()]+)\)").unwrap();
+        static ref RE: Regex = Regex::new(r"^([0-9-]+): Fels(bouldern|klettern) \(([^()]+)\)").unwrap();
     }
 
     let captures = match RE.captures(line) {
@@ -290,7 +290,7 @@ fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
         None => return Ok(None),
     };
     let date_str = captures[1].to_string();
-    let crags_str = captures[2].to_string();
+    let crags_str = captures[3].to_string();
 
     let date = match NaiveDate::parse_from_str(&date_str, "%Y-%m-%d") {
         Ok(date) => date,
