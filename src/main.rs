@@ -204,7 +204,7 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
             diff_for_day.push(format!("+{}", extraneous_crag).green().to_string());
         }
 
-        if diff_for_day.len() > 0 {
+        if !diff_for_day.is_empty() {
             diff.push_str(format!("{}: {}\n", date, diff_for_day.join(", ")).as_str());
         }
     }
@@ -333,19 +333,16 @@ fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
 
 fn get_logbook_from_txt(logbook_string: &str) -> Result<Logbook, io::Error> {
     let logbook_lines = logbook_string
-        .split("\n")
-        .filter(|line| line.len() > 0)
+        .split('\n')
+        .filter(|line| !line.is_empty())
         .skip_while(|line| *line != "### BEGIN theCrag sync")
         .skip(1)
         .collect::<Vec<&str>>();
 
     let mut logbook = Logbook::new();
     for line in logbook_lines {
-        match parse_txt_line(line)? {
-            Some(logday) => {
-                logbook.insert(logday.date, logday.crags);
-            }
-            None => {}
+        if let Some(logday) = parse_txt_line(line)? {
+            logbook.insert(logday.date, logday.crags);
         };
     }
 
