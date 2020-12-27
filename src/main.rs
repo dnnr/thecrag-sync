@@ -1,24 +1,24 @@
 #[macro_use]
 extern crate lazy_static;
-extern crate regex;
-extern crate simple_error;
+extern crate colored;
 extern crate deunicode;
 extern crate itertools;
-extern crate colored;
+extern crate regex;
+extern crate simple_error;
 
 use colored::*;
 
-use deunicode::deunicode;
-use clap::arg_enum;
 use chrono::NaiveDate;
+use clap::arg_enum;
+use deunicode::deunicode;
+use regex::Regex;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::collections::HashMap;
 use std::fs;
-use structopt::StructOpt;
 use std::io;
 use std::path::PathBuf;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::collections::BTreeSet;
-use regex::Regex;
+use structopt::StructOpt;
 
 #[derive(StructOpt)]
 #[structopt(about = "Compare theCrag CSV export to manually maintained logbook")]
@@ -59,7 +59,6 @@ fn main() {
             };
         }
     }
-
 }
 
 #[derive(Debug)]
@@ -79,7 +78,8 @@ type Logbook = BTreeMap<NaiveDate, BTreeSet<String>>;
 
 fn transliterate_crag_name(name: &String) -> String {
     // Manually transliterate umlauts (deunicode doesn't do it)
-    let name = name.replace("ä", "ae")
+    let name = name
+        .replace("ä", "ae")
         .replace("ö", "oe")
         .replace("ü", "ue")
         .replace("Ä", "Ae")
@@ -106,19 +106,17 @@ fn get_thecrag_logbook_as_string(thecrag_csv: &PathBuf) -> Result<String, io::Er
     let thecrag_string = fs::read_to_string(thecrag_csv)?;
     let thecrag_logbook = get_logbook_from_thecrag(&thecrag_string)?;
 
-    Ok(
-        thecrag_logbook
-            .iter()
-            .map(|(date, crags)| {
-                format!(
-                    "{}: Felsklettern ({})",
-                    date,
-                    itertools::join(crags.iter().map(transliterate_crag_name), ", ")
-                )
-            })
-            .collect::<Vec<String>>()
-            .join("\n"),
-    )
+    Ok(thecrag_logbook
+        .iter()
+        .map(|(date, crags)| {
+            format!(
+                "{}: Felsklettern ({})",
+                date,
+                itertools::join(crags.iter().map(transliterate_crag_name), ", ")
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n"))
 }
 
 fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String, io::Error> {
@@ -165,9 +163,10 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
                         "-{}: {}\n",
                         date,
                         itertools::join(thecrag_logbook.get(&date).unwrap().iter(), ", ")
-                    ).red()
-                        .to_string()
-                        .as_str(),
+                    )
+                    .red()
+                    .to_string()
+                    .as_str(),
                 );
                 continue;
             }
@@ -182,9 +181,10 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
                         "+{}: {}\n",
                         date,
                         itertools::join(txt_logbook.get(&date).unwrap().iter(), ", ")
-                    ).green()
-                        .to_string()
-                        .as_str(),
+                    )
+                    .green()
+                    .to_string()
+                    .as_str(),
                 );
                 continue;
             }
@@ -213,7 +213,6 @@ fn generate_diff(thecrag_csv: &PathBuf, logbook_txt: &PathBuf) -> Result<String,
 }
 
 fn get_crag_name_from_path(crag_path: &str) -> String {
-
     // Look for the last component before u typical sector name:
     let typical_non_crags = vec!["Upper part", "Left", "Right", "Middle", "Centre", "East"];
     let mut nodes: Vec<&str> = crag_path.split(" - ").collect();
@@ -227,8 +226,7 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
     };
 
     lazy_static! {
-        static ref LEVEL_HINTS: HashMap<&'static str, usize> =
-            [
+        static ref LEVEL_HINTS: HashMap<&'static str, usize> = [
             ("Geyikbayırı", 1),
             ("Frankenjura Nord", 3),
             ("Schlehenmühle", 4),
@@ -245,7 +243,10 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
             ("Valle del Sarca", 1),
             ("Monte Colt", 3),
             ("Ghar Lapsi", 1),
-            ].iter().cloned().collect();
+        ]
+        .iter()
+        .cloned()
+        .collect();
     }
 
     let nodes: Vec<&str> = crag_path.split(" - ").collect();
@@ -296,7 +297,8 @@ fn get_ticks_from_csv(csv_string: &str) -> Result<Vec<Tick>, io::Error> {
 
 fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"^([0-9-]+): Fels(bouldern|klettern) \(([^()]+)\)").unwrap();
+        static ref RE: Regex =
+            Regex::new(r"^([0-9-]+): Fels(bouldern|klettern) \(([^()]+)\)").unwrap();
     }
 
     let captures = match RE.captures(line) {
@@ -311,11 +313,7 @@ fn parse_txt_line(line: &str) -> Result<Option<LogDay>, io::Error> {
         Err(err) => {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
-                format!(
-                    "Cannot parse logbook date \"{}\": {}",
-                    date_str,
-                    err
-                ),
+                format!("Cannot parse logbook date \"{}\": {}", date_str, err),
             ));
         }
     };
