@@ -237,6 +237,14 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
             ("Leinleitertal", 4),
             ("Monte Garzo", 0),
             ("Vosges du Nord", 1),
+            ("Stanage", 0),
+            ("Newstones", 1),
+            ("Holyhead Mountain", 2),
+            ("Affalterthal", 5),
+            ("Mallorca", 2),
+            ("Valle del Sarca", 1),
+            ("Monte Colt", 3),
+            ("Ghar Lapsi", 1),
             ].iter().cloned().collect();
     }
 
