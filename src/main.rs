@@ -252,7 +252,9 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
     let nodes: Vec<&str> = crag_path.split(" - ").collect();
     for node in nodes.iter().rev() {
         if LEVEL_HINTS.contains_key(node) {
-            crag_name = &nodes[*LEVEL_HINTS.get(node).unwrap()];
+            // Make sure to stay within the bounds of the array, because some hints are not
+            // universal
+            crag_name = &nodes[std::cmp::min(nodes.len() - 1, *LEVEL_HINTS.get(node).unwrap())];
             break;
         }
     }
