@@ -243,6 +243,8 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
             ("Valle del Sarca", 1),
             ("Monte Colt", 3),
             ("Ghar Lapsi", 1),
+            ("Nörtener Wald", 1),
+            ("Irdum Irxaw (Mistra)", 1),
         ]
         .iter()
         .cloned()
