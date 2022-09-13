@@ -245,6 +245,14 @@ fn get_crag_name_from_path(crag_path: &str) -> String {
             ("Ghar Lapsi", 1),
             ("Nörtener Wald", 1),
             ("Irdum Irxaw (Mistra)", 1),
+            ("Entraygues", 0),
+            ("Rue des Masques", 0),
+            ("Ailefroide", 0),
+            ("Fessourier", 0),
+            ("Le Rif d'Oriol", 0),
+            ("Mont-Dauphin", 0),
+            ("Céüse", 0),
+            ("Rocher de l’ombre", 0),
         ]
         .iter()
         .cloned()
