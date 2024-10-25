@@ -63,6 +63,7 @@ fn main() {
 
 #[derive(Debug)]
 struct Tick {
+    #[allow(dead_code)] /* it's currently not used */
     route_name: String,
     crag_name: String,
     date: NaiveDate,
